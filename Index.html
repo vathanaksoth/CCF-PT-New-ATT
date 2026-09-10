@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ប្រព័ន្ធវត្តមានបុគ្គលិក និង QR Code Dashboard</title>
-    <!-- Tailwind CSS សម្រាប់ UI Design -->
+    <!-- Tailwind CSS សម���រាប់ UI Design -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
@@ -153,8 +153,36 @@
             document.getElementById("clock").innerText = now.toLocaleTimeString('en-US');
         }
 
+        // ៥. ស្តាប់ទិន្នន័យមកពី Mobil.html ឆ្លងកាត់ BroadcastChannel
+        function initializeBroadcastListener() {
+            const channel = new BroadcastChannel("attendance_channel");
+            
+            channel.onmessage = function(event) {
+                const staffData = event.data;
+                
+                // បង្កើតវត្ថុ staff ដែលមានលក្ខណៈដូច staffList ដើម្បីឱ្យ recordAttendance ធ្វើការ
+                const staff = {
+                    nameKh: staffData.nameKh,
+                    nameEn: staffData.nameEn,
+                    position: staffData.position,
+                    location: staffData.location
+                };
+                
+                // ថតវត្តមាននឹងលក់ម៉ោងត្រឹមត្រូវ
+                recordAttendance(staff);
+                
+                console.log("✓ ទិន្នន័យវត្តមានបានទទួល:", staffData);
+            };
+            
+            // ស្តាប់សម្រាប់ប្រភេទ error
+            channel.onerror = function(error) {
+                console.error("❌ កំហុស BroadcastChannel:", error);
+            };
+        }
+
         window.onload = function() {
             generateQRCode();
+            initializeBroadcastListener();
             setInterval(updateClock, 1000);
             updateClock();
         };
