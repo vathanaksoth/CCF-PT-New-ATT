@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>បំពេញព័ត៌មានវត្តមានបុគ្គលិក</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl w-full max-w-md">
+        <h2 class="text-xl font-bold text-blue-400 text-center mb-1">ចុះវត្តមានបុគ្គលិក</h2>
+        <p class="text-xs text-slate-400 text-center mb-6">សូមជ្រើសរើស ឬបំពេញព័ត៌មានខាងក្រោម</p>
+
+        <form id="attendance-form" onsubmit="submitAttendance(event)" class="space-y-4">
+            
+            <!-- ជ្រើសរើសបុគ្គលិក -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">ជ្រើសរើសឈ្មោះបុគ្គលិក *</label>
+                <select id="staff-select" onchange="autoFillData()" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-blue-500">
+                    <option value="">-- ជ្រើសរើសឈ្មោះ --</option>
+                    <option value="EMP001">ជុន វួចនា (Chun Vouchnea)</option>
+                    <option value="EMP002">ហោ លីហ៊ួរ (Hao Lyhour)</option>
+                    <option value="EMP003">ឃ្លាំង សំបូរ (Khlaing Sambo)</option>
+                    <option value="EMP004">គីម គ្រីស្ទីនណ្ណា (Kim Christinna)</option>
+                    <option value="EMP005">យាប លីមហ៊ាង (Yeab Lim Heang)</option>
+                    <option value="EMP006">សាំង រតនា (Saing Rathana)</option>
+                    <option value="EMP007">ចឹក វិឆ័យ (Chek Vichhay)</option>
+                </select>
+            </div>
+
+            <!-- តួនាទី -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">តួនាទី (Position)</label>
+                <input type="text" id="position" readonly placeholder="តួនាទី" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-3 text-sm text-slate-400 focus:outline-none">
+            </div>
+
+            <!-- ទីតាំង -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">ទីតាំង (Location)</label>
+                <input type="text" id="location" readonly placeholder="ទីតាំង" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-3 text-sm text-slate-400 focus:outline-none">
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold py-3 rounded-xl transition text-sm shadow-lg shadow-blue-900/40 mt-2">
+                រក្សាទុកវត្តមាន (Submit)
+            </button>
+        </form>
+
+        <div id="success-msg" class="hidden mt-4 bg-emerald-900/60 border border-emerald-600 text-emerald-300 text-center text-sm p-3 rounded-xl">
+            ✓ បានរក្សាទុកវត្តមានជោគជ័យ!
+        </div>
+    </div>
+
+    <script>
+        const staffDatabase = {
+            "EMP001": { nameKh: "ជុន វួចនា", nameEn: "Chun Vouchnea", position: "Mathematics Teacher", location: "NCA" },
+            "EMP002": { nameKh: "ហោ លីហ៊ួរ", nameEn: "Hao Lyhour", position: "Mathematics Subject Leader", location: "NCA" },
+            "EMP003": { nameKh: "ឃ្លាំង សំបូរ", nameEn: "Khlaing Sambo", position: "Home Economics Teacher", location: "NCA" },
+            "EMP004": { nameKh: "គីម គ្រីស្ទីនណ្ណា", nameEn: "Kim Christinna", position: "English Teacher", location: "NCA" },
+            "EMP005": { nameKh: "យាប លីមហ៊ាង", nameEn: "Yeab Lim Heang", position: "ICT Teacher", location: "NCA" },
+            "EMP006": { nameKh: "សាំង រតនា", nameEn: "Saing Rathana", position: "Physic Teacher", location: "SBC" },
+            "EMP007": { nameKh: "ចឹក វិឆ័យ", nameEn: "Chek Vichhay", position: "Mathematics Teacher", location: "TA" }
+        };
+
+        function autoFillData() {
+            const staffId = document.getElementById("staff-select").value;
+            if (staffId && staffDatabase[staffId]) {
+                document.getElementById("position").value = staffDatabase[staffId].position;
+                document.getElementById("location").value = staffDatabase[staffId].location;
+            } else {
+                document.getElementById("position").value = "";
+                document.getElementById("location").value = "";
+            }
+        }
+
+        function submitAttendance(e) {
+            e.preventDefault();
+            const staffId = document.getElementById("staff-select").value;
+            if (!staffId) return;
+
+            const staffInfo = staffDatabase[staffId];
+            const timeString = new Date().toLocaleTimeString('en-US');
+
+            const payload = {
+                nameKh: staffInfo.nameKh,
+                nameEn: staffInfo.nameEn,
+                position: staffInfo.position,
+                location: staffInfo.location,
+                scanTime: timeString
+            };
+
+            // បញ្ជូនទិន្នន័យទៅកាន់អេក្រង់ TV/Tablet (index.html) ភ្លាមៗ
+            const channel = new BroadcastChannel("attendance_channel");
+            channel.postMessage(payload);
+
+            // បង្ហាញ Message
+            document.getElementById("attendance-form").reset();
+            document.getElementById("position").value = "";
+            document.getElementById("location").value = "";
+            document.getElementById("success-msg").classList.remove("hidden");
+
+            setTimeout(() => {
+                document.getElementById("success-msg").classList.add("hidden");
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
